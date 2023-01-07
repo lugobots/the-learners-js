@@ -1,0 +1,22 @@
+{
+  "name": "the-learners-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "tsc": "rm -rf dist/* && tsc",
+    "start": "node dist/index.js",
+    "watch": "tsc --skipLibCheck --watch"
+  },
+  "type": "commonjs",
+  "author": "Rubens Silva <rubens21@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^4.2.0",
+    "@types/node": "^18.11.18",
+    "@lugobots/lugo4node": "^1.0.1-beta.2-rc.1"
+  },
+  "devDependencies": {
+    "tsc-watch": "^6.0.0"
+  }
+}
