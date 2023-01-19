@@ -1,5 +1,4 @@
 import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl} from "@lugobots/lugo4node";
-import * as tf from "@tensorflow/tfjs-node";
 
 export const TRAINING_PLAYER_NUMBER = 5
 
@@ -18,7 +17,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         // The mapper will help the bot to see the field in quadrants
         // and will translate the coordinates automatically regardless what side of the field the bot is playing
         // see the documentation at https://github.com/lugobots/lugo4node#mapper-and-region-classes
-        this.mapper = new Mapper(20, 20, Lugo.Team.Side.HOME)
+        this.mapper = new Mapper(20, 10, Lugo.Team.Side.HOME)
 
         // here I am setting all players in some random position, but of course you can change how the initial state will be
         for (let i = 1; i <= 11; i++) {
@@ -51,7 +50,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         return await this.remoteControl.setBallProps(ballPos, newVelocity)
     }
 
-    async getInputs(snapshot: Lugo.GameSnapshot): Promise<any> {
+    getInputs(snapshot: Lugo.GameSnapshot): any {
         // here we should read the scenario and return the inputs that will be used by our neural network
         // the inputs, of course, are read from the game snapshot
 
