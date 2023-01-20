@@ -12,9 +12,7 @@
   "author": "Rubens Silva <rubens21@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "@tensorflow/tfjs-node": "^4.2.0",
-    "@types/node": "^18.11.18",
-    "@lugobots/lugo4node": "^1.0.1-beta.2-rc.1"
+    "@lugobots/lugo4node": "^1.0.1-beta.2-rc.2"
   },
   "devDependencies": {
     "tsc-watch": "^6.0.0"
