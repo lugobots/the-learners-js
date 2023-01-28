@@ -1,11 +1,15 @@
-import {Mapper, Client, rl, Lugo, DIRECTION, SPECS } from "@lugobots/lugo4node";
+import {Mapper, Client, rl, Lugo, DIRECTION, SPECS} from "@lugobots/lugo4node";
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
 import {QLearner} from "./q-learning";
 
-const modelFilepath = './q-table.json'
+const modelFilepath = './base.json'
 // training settings
 const trainIterations = 10000;
-const stepsPerIteration = 120;
+const stepsPerIteration = 150;
+
+const testSessionInterval = 50;
+const gamesPerTestSession = 10;
+const stepsPerGame = 150;
 
 const grpcAddress = "localhost:5000";
 const grpcInsecure = true;
@@ -76,7 +80,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 //and the best action
                 let action = learner.bestAction(currentState);
                 //if there is no best action try to explore
-                if ((action==undefined) || (learner.getQValue(currentState, action) <= 0) || (Math.random()<exploration)) {
+                if ((action == undefined) || (learner.getQValue(currentState, action) <= 0) || (Math.random() < exploration)) {
                     action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
                 }
 
@@ -103,6 +107,33 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
             }
             learner.save(modelFilepath)
 
+            if((i+1) % testSessionInterval === 0) {
+                /// testing
+                console.log(`Starting test session for interaction ${i}`)
+                for (let trainI = 0; trainI < gamesPerTestSession; ++trainI) {
+                    let gameScore = 0;
+                    await trainingCtrl.setRandomState();
+                    for (let gameI = 0; gameI < stepsPerGame; ++gameI) {
+                        const sensorsStateTest = await trainingCtrl.getInputs();
+                        const currentState = nameState(sensorsStateTest)
+
+                        //and the best action
+                        let action = learner.predictAction(currentState);
+                        //if there is no best action try to explore
+                        if (!action) {
+                            console.error(`NO action found for state ${currentState}`)
+                            action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
+                        }
+                        const {reward, done} = await trainingCtrl.update(action);
+                        gameScore += reward
+                        if (done) {
+                            console.log(`Game done after ${gameI} steps`)
+                            break;
+                        }
+                    }
+                    console.log(`End of train game ${trainI}, final score: `, gameScore)
+                }
+            }
         } catch (e) {
             console.error(e);
         }

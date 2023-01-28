@@ -190,6 +190,21 @@ export class QLearner {
         return bestAction
     }
 
+    predictAction(state) {
+        let qValues = this.qValuesTable[state] || {}
+        let prediction = null;
+        for (let action in qValues) {
+            if (qValues.hasOwnProperty(action)) {
+                if (!prediction) {
+                    prediction = action
+                } else if (qValues[action] > qValues[prediction]) {
+                    prediction = action
+                }
+            }
+        }
+        return prediction
+    }
+
     /**
      * From current state, choose the best action and apply it,
      * doing a transition for the next state and setting this as currentState
