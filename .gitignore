@@ -2,3 +2,4 @@ model_output/
 node_modules/
 dist/
 .idea/
+./q-table.json

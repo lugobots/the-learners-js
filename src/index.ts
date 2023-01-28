@@ -1,10 +1,11 @@
 import {Mapper, Client, rl, Lugo, DIRECTION, SPECS } from "@lugobots/lugo4node";
-
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
+import {QLearner} from "./q-learning";
 
+const modelFilepath = './q-table.json'
 // training settings
-const trainIterations = 50;
-const stepsPerIteration = 50;
+const trainIterations = 10000;
+const stepsPerIteration = 120;
 
 const grpcAddress = "localhost:5000";
 const grpcInsecure = true;
@@ -50,32 +51,48 @@ const grpcInsecure = true;
 
 
 async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<void> {
-    console.log(`Let's training`)
-
     const possibleAction = [
         DIRECTION.FORWARD,
         DIRECTION.BACKWARD,
         DIRECTION.LEFT,
         DIRECTION.RIGHT,
-        DIRECTION.BACKWARD_LEFT,
-        DIRECTION.BACKWARD_RIGHT,
-        DIRECTION.FORWARD_RIGHT,
-        DIRECTION.FORWARD_LEFT,
     ];
+
+
+    let learner = new QLearner(0.1, 0.8)
+    learner.load(modelFilepath)
+    const exploration = 0.05
+
     const scores = [];
     for (let i = 0; i < trainIterations; ++i) {
         try {
             scores[i] = 0
             await trainingCtrl.setRandomState();
 
+            let sensorsState0 = await trainingCtrl.getInputs();
             for (let j = 0; j < stepsPerIteration; ++j) {
-                const sensors = await trainingCtrl.getInputs();
+                const currentState = nameState(sensorsState0)
 
-                // the sensors would feed or training model, which would return the next action
-                const action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
+                //and the best action
+                let action = learner.bestAction(currentState);
+                //if there is no best action try to explore
+                if ((action==undefined) || (learner.getQValue(currentState, action) <= 0) || (Math.random()<exploration)) {
+                    action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
+                }
 
                 // then we pass the action to our update method
                 const {reward, done} = await trainingCtrl.update(action);
+                console.log(`currentState(Action) => reward`, currentState, action, reward)
+
+                let sensorsState1 = await trainingCtrl.getInputs();
+                const nextState = nameState(sensorsState1)
+                learner.add(currentState, nextState, reward, action);
+
+                //make que q-learning algorithm number of iterations=10 or it could be another number
+                learner.learn(100);
+
+                sensorsState0 = sensorsState1
+
                 // now we should reward our model with the reward value
                 scores[i] += reward
                 if (done) {
@@ -84,6 +101,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                     break;
                 }
             }
+            learner.save(modelFilepath)
 
         } catch (e) {
             console.error(e);
@@ -91,5 +109,9 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
     }
     await trainingCtrl.stop()
     console.log(`Training is over, scores: `, scores)
+}
+
+function nameState(sensors) {
+    return JSON.stringify(sensors)
 }
 
