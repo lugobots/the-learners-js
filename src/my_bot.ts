@@ -56,7 +56,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         // the inputs, of course, are read from the game snapshot
 
         const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
-        const me = reader.getPlayer(Lugo.Team.Side.HOME, 1)
+        const me = reader.getPlayer(Lugo.Team.Side.HOME, TRAINING_PLAYER_NUMBER )
         if (!me) {
             throw new Error("did not find myself in the game")
         }
@@ -122,10 +122,10 @@ export class MyBotTrainer implements rl.BotTrainer {
         const goalX = newInputs[2];
         const goalY = newInputs[3];
         const distanceToGoalSquared = Math.pow(playerX - goalX, 2) + Math.pow(playerY - goalY, 2)
-        console.log(`distanceToGoalSquared: ${distanceToGoalSquared}`)
+        // console.log(`distanceToGoalSquared: ${distanceToGoalSquared}`)
         
         const reward = Math.exp(-distanceToGoalSquared*5);
-        console.log(`reward: ${reward}`)
+        // console.log(`reward: ${reward}`)
         const eps = 0.0001;
 
         return {done: distanceToGoalSquared <= eps, reward: reward}
