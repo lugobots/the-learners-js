@@ -47,10 +47,13 @@ export class MyBotTrainer implements rl.BotTrainer {
         }
         const mappedOpponents = this._findOpponent(reader)
         const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
+        const goalPosition = reader.getOpponentGoal().getCenter();
 
 
         // console.log(`Sensorres: `, [sensorFront, sensorLeft, sensorRight])
         return [
+            me.getPosition().getX(),
+            me.getPosition().getY(),
             this.getFrontSensor(mappedOpponents, myPosition),
             this.getBackSensor(mappedOpponents, myPosition),
             this.getLeftFrontSensor(mappedOpponents, myPosition),
