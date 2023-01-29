@@ -97,6 +97,9 @@ export class QLearner {
     }
 
     load(path) {
+        if (!fs.existsSync(path)) {
+            fs.writeFileSync(path, '{}')
+        }
         const data = fs.readFileSync(path, {encoding: 'utf8'})
         // const serialised = inflateSync(data).toString('utf8')
         // console.log(serialised)

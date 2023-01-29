@@ -2,14 +2,14 @@ import {Mapper, Client, rl, Lugo, DIRECTION, SPECS} from "@lugobots/lugo4node";
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
 import {QLearner} from "./q-learning";
 
-const modelFilepath = './base.json'
+const modelFilepath = './base-more-sensors.json'
 // training settings
 const trainIterations = 10000;
-const stepsPerIteration = 150;
+const stepsPerIteration = 120;
 
-const testSessionInterval = 50;
+const testSessionInterval = 1000;
 const gamesPerTestSession = 10;
-const stepsPerGame = 150;
+const stepsPerGame = 80;
 
 const grpcAddress = "localhost:5000";
 const grpcInsecure = true;
@@ -60,12 +60,16 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
         DIRECTION.BACKWARD,
         DIRECTION.LEFT,
         DIRECTION.RIGHT,
+        DIRECTION.FORWARD_RIGHT,
+        DIRECTION.FORWARD_LEFT,
+        DIRECTION.BACKWARD_RIGHT,
+        DIRECTION.BACKWARD_LEFT,
     ];
 
 
-    let learner = new QLearner(0.1, 0.8)
+    let learner = new QLearner(0.5, 0.8)
     learner.load(modelFilepath)
-    const exploration = 0.05
+    const exploration = 0.07
 
     const scores = [];
     for (let i = 0; i < trainIterations; ++i) {
@@ -86,7 +90,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
 
                 // then we pass the action to our update method
                 const {reward, done} = await trainingCtrl.update(action);
-                console.log(`currentState(Action) => reward`, currentState, action, reward)
+                // console.log(`currentState(Action) => reward`, currentState, action, reward)
 
                 let sensorsState1 = await trainingCtrl.getInputs();
                 const nextState = nameState(sensorsState1)
@@ -101,10 +105,11 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 scores[i] += reward
                 if (done) {
                     // no more steps
-                    console.log(`End of trainIteration ${i}, score: `, scores[i])
                     break;
                 }
             }
+            console.log(`End of trainIteration ${i}, score: `, scores[i])
+            
             learner.save(modelFilepath)
 
             if((i+1) % testSessionInterval === 0) {
