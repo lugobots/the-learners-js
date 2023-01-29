@@ -52,8 +52,9 @@ export class MyBotTrainer implements rl.BotTrainer {
 
         // console.log(`Sensorres: `, [sensorFront, sensorLeft, sensorRight])
         return [
-            me.getPosition().getX(),
-            me.getPosition().getY(),
+            //TODO: Replace by Mapper
+            Math.round(me.getPosition().getX() / 1000.0),
+            Math.round(me.getPosition().getY() / 1000.0),
             this.getFrontSensor(mappedOpponents, myPosition),
             this.getBackSensor(mappedOpponents, myPosition),
             this.getLeftFrontSensor(mappedOpponents, myPosition),
@@ -336,22 +337,12 @@ export class MyBotTrainer implements rl.BotTrainer {
             opponentGoal.getY() - me.getPosition().getY())
 
         const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
-        let reward = (previousDist > actualDist) ? 6 : 1;
-        let done = false
+        let reward = (previousDist > actualDist) ? 1 : -1;
+        let done = false;
 
-        const previousPenalty = this.getInputs(previousSnapshot).reduce((a, b) => a + b)
-        const newPenalty = this.getInputs(newSnapshot).reduce((a, b) => a + b)
-
-
-        // if delta is positive, we got closer to the bots
-        // if delta is negative, we got away from the bots
-        const deltaSensors = newPenalty - previousPenalty
-
-
-
-        reward -= deltaSensors
         if (mePreviously.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.9) {
-            done = true
+            done = true;
+            reward = 10000;
         }
 
         // console.log(`newPenalty: ${newPenalty},     previousPenalty: ${previousPenalty},    deltaSensors: ${deltaSensors},  reward: ${reward}`)
