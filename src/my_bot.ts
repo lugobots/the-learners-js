@@ -63,10 +63,14 @@ export class MyBotTrainer implements rl.BotTrainer {
             throw new Error("did not find myself in the game")
         }
 
+        const goalCenter = reader.getOpponentGoal().getCenter();
+
         const playerX = me.getPosition().getX() / MAX_FIELD_WIDTH;// SPECS.FIELD_HEIGHT;
         const playerY = me.getPosition().getY() / MAX_FIELD_HEIGHT;// SPECS.FIELD_HEIGHT;
-        const goalX = MAX_FIELD_WIDTH / MAX_FIELD_WIDTH;// SPECS.FIELD_WIDTH;
-        const goalY = 5000 / MAX_FIELD_HEIGHT;// SPECS.FIELD_HEIGHT;
+        const goalX = goalCenter.getX();// SPECS.FIELD_WIDTH;
+        const goalY = goalCenter.getY();// SPECS.FIELD_HEIGHT;
+
+        // TODO I am not sure the goal coordinates will help here because they are constants. Maybe you want to have the delta to those coordinates?
         const inputList = [playerX, playerY, goalX, goalY]
         // console.log(`Inputs: `, inputList)
         return [inputList];
@@ -106,8 +110,10 @@ export class MyBotTrainer implements rl.BotTrainer {
         const goalX = newInputs[2];
         const goalY = newInputs[3];
         const distanceToGoalSquared = Math.pow(playerX - goalX, 2) + Math.pow(playerY - goalY, 2)
+        console.log(`distanceToGoalSquared: ${distanceToGoalSquared}`)
         
         const reward = Math.exp(-distanceToGoalSquared*5);
+        console.log(`reward: ${reward}`)
         const eps = 0.0000001;
 
         return {done: distanceToGoalSquared <= eps, reward: reward}
