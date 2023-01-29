@@ -1,6 +1,9 @@
 import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl} from "@lugobots/lugo4node";
+import * as tf from "@tensorflow/tfjs-node";
 
 export const TRAINING_PLAYER_NUMBER = 5
+export const MAX_FIELD_HEIGHT = 10001
+export const MAX_FIELD_WIDTH = 20001
 
 export class MyBotTrainer implements rl.BotTrainer {
 
@@ -54,8 +57,19 @@ export class MyBotTrainer implements rl.BotTrainer {
         // here we should read the scenario and return the inputs that will be used by our neural network
         // the inputs, of course, are read from the game snapshot
 
-        // we can return whatever format we want
-        return [true, true, false];
+        const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
+        const me = reader.getPlayer(Lugo.Team.Side.HOME, 1)
+        if (!me) {
+            throw new Error("did not find myself in the game")
+        }
+
+        const playerX = me.getPosition().getX() / MAX_FIELD_WIDTH;// SPECS.FIELD_HEIGHT;
+        const playerY = me.getPosition().getY() / MAX_FIELD_HEIGHT;// SPECS.FIELD_HEIGHT;
+        const goalX = MAX_FIELD_WIDTH / MAX_FIELD_WIDTH;// SPECS.FIELD_WIDTH;
+        const goalY = 5000 / MAX_FIELD_HEIGHT;// SPECS.FIELD_HEIGHT;
+        const inputList = [playerX, playerY, goalX, goalY]
+        // console.log(`Inputs: `, inputList)
+        return [inputList];
     }
 
     async play(orderSet: Lugo.OrderSet, snapshot: Lugo.GameSnapshot, action: any): Promise<Lugo.OrderSet> {
@@ -85,9 +99,18 @@ export class MyBotTrainer implements rl.BotTrainer {
         // if I am training my bot to move forward, I can check how closer to the goal he got,
         // if I am training my bot to take the ball, I can check how closer to the bot he got.
 
-        const readerPrevious = new GameSnapshotReader(previousSnapshot, Lugo.Team.Side.HOME)
-        const reader = new GameSnapshotReader(newSnapshot, Lugo.Team.Side.HOME)
-        return {done: newSnapshot.getTurn() >= 20, reward: Math.random()}
+        const newInputs = this.getInputs(newSnapshot);
+
+        const playerX = newInputs[0];
+        const playerY = newInputs[1];
+        const goalX = newInputs[2];
+        const goalY = newInputs[3];
+        const distanceToGoalSquared = Math.pow(playerX - goalX, 2) + Math.pow(playerY - goalY, 2)
+        
+        const reward = Math.exp(-distanceToGoalSquared*5);
+        const eps = 0.0000001;
+
+        return {done: distanceToGoalSquared <= eps, reward: reward}
     }
 
     async _randomPlayerPos(mapper, side, number) {
