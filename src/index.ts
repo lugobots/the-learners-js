@@ -102,7 +102,6 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 if (exploreTurn){
                     action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
                 }
-                console.log(action)
 
                 const {reward, done} = await trainingCtrl.update(action);
                 gameRewards.push(reward);
