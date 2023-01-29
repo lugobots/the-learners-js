@@ -1,4 +1,4 @@
-import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl} from "@lugobots/lugo4node";
+import {GameSnapshotReader, Lugo, Mapper, SPECS, DIRECTION, ORIENTATION, rl} from "@lugobots/lugo4node";
 import * as tf from "@tensorflow/tfjs-node";
 
 export const TRAINING_PLAYER_NUMBER = 5
@@ -85,9 +85,23 @@ export class MyBotTrainer implements rl.BotTrainer {
         // and so on.
         // Our actions will be defined in our training function based on what we are training.
         // The action can be anything, so we can have a json if several values.
-
         const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
-        const dir = reader.makeOrderMoveByDirection(action)
+        const me = reader.getPlayer(Lugo.Team.Side.HOME, 5)
+        if (!me) {
+            throw new Error("did not find myself in the game")
+        }
+        const possibleAction = [
+            DIRECTION.FORWARD,
+            DIRECTION.BACKWARD,
+            DIRECTION.LEFT,
+            DIRECTION.RIGHT,
+            DIRECTION.FORWARD_RIGHT,
+            DIRECTION.FORWARD_LEFT,
+            DIRECTION.BACKWARD_RIGHT,
+            DIRECTION.BACKWARD_LEFT,
+        ];
+
+        const dir = reader.makeOrderMoveByDirection(possibleAction[action])
         return orderSet.setOrdersList([dir])
     }
 
@@ -112,7 +126,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         
         const reward = Math.exp(-distanceToGoalSquared*5);
         console.log(`reward: ${reward}`)
-        const eps = 0.0000001;
+        const eps = 0.0001;
 
         return {done: distanceToGoalSquared <= eps, reward: reward}
     }
