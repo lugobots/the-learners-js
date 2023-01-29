@@ -52,9 +52,8 @@ export class MyBotTrainer implements rl.BotTrainer {
 
         // console.log(`Sensorres: `, [sensorFront, sensorLeft, sensorRight])
         return [
-            //TODO: Replace by Mapper
-            Math.round(me.getPosition().getX() / 1000.0),
-            Math.round(me.getPosition().getY() / 1000.0),
+            myPosition.getCol(),// equivalent to X
+            myPosition.getRow(),// Equivalent to Y
             this.getFrontSensor(mappedOpponents, myPosition),
             this.getBackSensor(mappedOpponents, myPosition),
             this.getLeftFrontSensor(mappedOpponents, myPosition),
