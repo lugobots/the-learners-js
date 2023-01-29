@@ -86,7 +86,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
 
             for (let j = 0; j < stepsPerIteration; ++j) {
                 const sensors = await trainingCtrl.getInputs();
-                const inputTensor = tf.tensor2d(sensors);
+                const inputTensor = tf.tensor2d([sensors]);
                 const gradients = tf.tidy(() => {
                     return policyNet.getGradientsAndSaveActions(inputTensor).grads;
                   });

@@ -2,8 +2,6 @@ import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl} from "@lugobot
 import * as tf from "@tensorflow/tfjs-node";
 
 export const TRAINING_PLAYER_NUMBER = 5
-export const MAX_FIELD_HEIGHT = 10001
-export const MAX_FIELD_WIDTH = 20001
 
 export class MyBotTrainer implements rl.BotTrainer {
 
@@ -65,15 +63,15 @@ export class MyBotTrainer implements rl.BotTrainer {
 
         const goalCenter = reader.getOpponentGoal().getCenter();
 
-        const playerX = me.getPosition().getX() / MAX_FIELD_WIDTH;// SPECS.FIELD_HEIGHT;
-        const playerY = me.getPosition().getY() / MAX_FIELD_HEIGHT;// SPECS.FIELD_HEIGHT;
-        const goalX = goalCenter.getX();// SPECS.FIELD_WIDTH;
-        const goalY = goalCenter.getY();// SPECS.FIELD_HEIGHT;
+        const playerX = me.getPosition().getX() / SPECS.FIELD_WIDTH;
+        const playerY = me.getPosition().getY() / SPECS.FIELD_HEIGHT;
+        const goalX = goalCenter.getX() / SPECS.FIELD_WIDTH;
+        const goalY = goalCenter.getY() / SPECS.FIELD_HEIGHT;
 
         // TODO I am not sure the goal coordinates will help here because they are constants. Maybe you want to have the delta to those coordinates?
         const inputList = [playerX, playerY, goalX, goalY]
         // console.log(`Inputs: `, inputList)
-        return [inputList];
+        return inputList;
     }
 
     async play(orderSet: Lugo.OrderSet, snapshot: Lugo.GameSnapshot, action: any): Promise<Lugo.OrderSet> {
