@@ -5,7 +5,7 @@ import {QLearner} from "./q-learning";
 const modelFilepath = './base-more-sensors.json'
 // training settings
 const trainIterations = 10000;
-const stepsPerIteration = 120;
+const stepsPerIteration = 1000;
 
 const testSessionInterval = 1000;
 const gamesPerTestSession = 10;
@@ -67,8 +67,8 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
     ];
 
 
-    let learner = new QLearner(0.5, 0.8)
-    learner.load(modelFilepath)
+    let learner = new QLearner(0, 1)
+    learner.load(modelFilepath);
     const exploration = 0.2
 
     const scores = [];
@@ -97,7 +97,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 learner.add(currentState, nextState, reward, action);
 
                 //make que q-learning algorithm number of iterations=10 or it could be another number
-                learner.learn(100);
+                learner.learn(10);
 
                 sensorsState0 = sensorsState1
 

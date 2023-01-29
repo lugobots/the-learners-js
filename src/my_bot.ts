@@ -46,10 +46,11 @@ export class MyBotTrainer implements rl.BotTrainer {
             throw new Error("did not find myself in the game")
         }
         const mappedOpponents = this._findOpponent(reader)
-        const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
+        // const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
         const goalPosition = reader.getOpponentGoal().getCenter();
 
-
+        const stateMapper = new Mapper(5, 3, Lugo.Team.Side.HOME);
+        const myPosition = stateMapper.getRegionFromPoint(me.getPosition())
         // console.log(`Sensorres: `, [sensorFront, sensorLeft, sensorRight])
         return [
             myPosition.getCol(),// equivalent to X
@@ -336,12 +337,19 @@ export class MyBotTrainer implements rl.BotTrainer {
             opponentGoal.getY() - me.getPosition().getY())
 
         const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
-        let reward = (previousDist > actualDist) ? 1 : -1;
+        let reward = (previousDist - actualDist);
         let done = false;
 
-        if (mePreviously.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.9) {
+        // positive end
+        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.95 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
             done = true;
             reward = 10000;
+        }
+        //negative end
+        const mappedOpponents = this._findOpponent(reader);
+        if(this._hasOpponent(mappedOpponents, myPosition)){
+            done = true;
+            reward = -20000;
         }
 
         // console.log(`newPenalty: ${newPenalty},     previousPenalty: ${previousPenalty},    deltaSensors: ${deltaSensors},  reward: ${reward}`)
