@@ -13,7 +13,7 @@ export class MyBotTrainer implements rl.BotTrainer {
     }
 
     async createNewInitialState(): Promise<Lugo.GameSnapshot> {
-        this.mapper = new Mapper(30, 15, Lugo.Team.Side.HOME)
+        this.mapper = new Mapper(60, 30, Lugo.Team.Side.HOME)
         for (let i = 1; i <= 11; i++) {
             await this._randomPlayerPos(this.mapper, Lugo.Team.Side.HOME, i)
             await this._randomPlayerPos(this.mapper, Lugo.Team.Side.AWAY, i)
@@ -25,7 +25,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         await this.remoteControl.setPlayerProps(
             Lugo.Team.Side.HOME,
             TRAINING_PLAYER_NUMBER,
-            this.mapper.getRegion(15, randomInteger(4, 10)).getCenter(),
+            this.mapper.getRegion(30, randomInteger(8, 15)).getCenter(),
             randomVelocity)
 
         const ballPos = new Lugo.Point()
@@ -73,7 +73,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
+
         front = front.front()
         if (
             this._hasOpponent(mappedOpponents, front) ||
@@ -84,6 +84,8 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 3
         }
+
+        return 0
         front = front.front()
         if (
             this._hasOpponent(mappedOpponents, front) ||
@@ -121,7 +123,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
         back = back.back()
         if (
             this._hasOpponent(mappedOpponents, back) ||
@@ -130,6 +131,8 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 3
         }
+        return 0
+        
         back = back.back()
         if (
             this._hasOpponent(mappedOpponents, back) ||
@@ -150,7 +153,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
         left = left.left()
         if (
             this._hasOpponent(mappedOpponents, left) ||
@@ -159,6 +161,8 @@ export class MyBotTrainer implements rl.BotTrainer {
             return 3
         }
 
+        return 0
+        
         left = left.left()
         if (
             this._hasOpponent(mappedOpponents, left) ||
@@ -188,7 +192,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
         right = right.right()
         if (
             this._hasOpponent(mappedOpponents, right) ||
@@ -197,6 +200,8 @@ export class MyBotTrainer implements rl.BotTrainer {
             return 3
         }
 
+        return 0
+        
         right = right.right()
         if (
             this._hasOpponent(mappedOpponents, right) ||
@@ -226,7 +231,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
         left = left.left()
         if (
             this._hasOpponent(mappedOpponents, left) ||
@@ -235,6 +239,7 @@ export class MyBotTrainer implements rl.BotTrainer {
             return 3
         }
 
+        return 0
         left = left.left()
         if (
             this._hasOpponent(mappedOpponents, left) ||
@@ -263,7 +268,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         ) {
             return 4
         }
-        return 0
         right = right.right()
         if (
             this._hasOpponent(mappedOpponents, right) ||
@@ -272,6 +276,7 @@ export class MyBotTrainer implements rl.BotTrainer {
             return 3
         }
 
+        return 0
         right = right.right()
         if (
             this._hasOpponent(mappedOpponents, right) ||
@@ -344,7 +349,7 @@ export class MyBotTrainer implements rl.BotTrainer {
 
         // positive end
         // if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
-        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90){
+        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.93){
             done = true;
             reward = 10000;
         }
@@ -360,10 +365,10 @@ export class MyBotTrainer implements rl.BotTrainer {
     }
 
     async _randomPlayerPos(mapper, side, number) {
-        const minCol = 15
-        const maxCol = 27
-        const minRow = 2
-        const maxRow = 12
+        const minCol = 30
+        const maxCol = 54
+        const minRow = 4
+        const maxRow = 24
 
         const randomVelocity = new Lugo.Velocity()
         randomVelocity.setSpeed(0)
