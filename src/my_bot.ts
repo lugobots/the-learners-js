@@ -71,7 +71,7 @@ export class MyBotTrainer implements rl.BotTrainer {
             this._hasOpponent(mappedOpponents, front.left()) ||
             this._hasOpponent(mappedOpponents, front.right())
         ) {
-            return 4
+            return 1
         }
 
         front = front.front()
@@ -82,37 +82,8 @@ export class MyBotTrainer implements rl.BotTrainer {
             this._hasOpponent(mappedOpponents, front.right()) ||
             this._hasOpponent(mappedOpponents, front.right().right())
         ) {
-            return 3
-        }
-
-        return 0
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right())
-        ) {
             return 2
         }
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right().right())
-        ) {
-            return 1
-        }
-
         return 0
     }
 
@@ -121,28 +92,16 @@ export class MyBotTrainer implements rl.BotTrainer {
         if (
             this._hasOpponent(mappedOpponents, back)
         ) {
-            return 4
+            return 1
         }
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.right())
-        ) {
-            return 3
-        }
-        return 0
-        
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.left().left()) ||
-            this._hasOpponent(mappedOpponents, back.right()) ||
-            this._hasOpponent(mappedOpponents, back.right().right())
-        ) {
-            return 2
-        }
+        // back = back.back()
+        // if (
+        //     this._hasOpponent(mappedOpponents, back) ||
+        //     this._hasOpponent(mappedOpponents, back.left()) ||
+        //     this._hasOpponent(mappedOpponents, back.right())
+        // ) {
+        //     return 2
+        // }
         return 0
     }
 
@@ -151,36 +110,15 @@ export class MyBotTrainer implements rl.BotTrainer {
         if (
             this._hasOpponent(mappedOpponents, left)
         ) {
-            return 4
-        }
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front())
-        ) {
-            return 3
-        }
-
-        return 0
-        
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front().front())
-        ) {
             return 1
         }
+        // left = left.left()
+        // if (
+        //     this._hasOpponent(mappedOpponents, left) ||
+        //     this._hasOpponent(mappedOpponents, left.front())
+        // ) {
+        //     return 2
+        // }
 
         return 0
     }
@@ -190,37 +128,16 @@ export class MyBotTrainer implements rl.BotTrainer {
         if (
             this._hasOpponent(mappedOpponents, right)
         ) {
-            return 4
-        }
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front())
-        ) {
-            return 3
-        }
-
-        return 0
-        
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front().front())
-        ) {
             return 1
         }
-
+        // right = right.right()
+        // if (
+        //     this._hasOpponent(mappedOpponents, right) ||
+        //     this._hasOpponent(mappedOpponents, right.front())
+        // ) {
+        //     return 2
+        // }
+        
         return 0
     }
 
@@ -229,34 +146,15 @@ export class MyBotTrainer implements rl.BotTrainer {
         if (
             this._hasOpponent(mappedOpponents, left)
         ) {
-            return 4
-        }
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back())
-        ) {
-            return 3
-        }
-
-        return 0
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
             return 1
         }
+        // left = left.left()
+        // if (
+        //     this._hasOpponent(mappedOpponents, left) ||
+        //     this._hasOpponent(mappedOpponents, left.back())
+        // ) {
+        //     return 2
+        // }
 
         return 0
     }
@@ -266,34 +164,15 @@ export class MyBotTrainer implements rl.BotTrainer {
         if (
             this._hasOpponent(mappedOpponents, right)
         ) {
-            return 4
-        }
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back())
-        ) {
-            return 3
-        }
-
-        return 0
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
             return 1
         }
+        // right = right.right()
+        // if (
+        //     this._hasOpponent(mappedOpponents, right) ||
+        //     this._hasOpponent(mappedOpponents, right.back())
+        // ) {
+        //     return 2
+        // }
 
         return 0
     }
@@ -349,7 +228,7 @@ export class MyBotTrainer implements rl.BotTrainer {
 
         // positive end
         // if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
-        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.93){
+        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.94){
             done = true;
             reward = 10000;
         }

@@ -67,7 +67,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
     ];
 
 
-    let learner = new QLearner(0.4, 0.8)
+    let learner = new QLearner(0.1, 0.8)
     learner.load(modelFilepath);
     const exploration = 0.05
 
