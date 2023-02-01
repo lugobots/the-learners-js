@@ -1,6 +1,15 @@
-import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl, DIRECTION, Region} from "@lugobots/lugo4node";
+import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl, DIRECTION, geo, Region} from "@lugobots/lugo4node";
 
 export const TRAINING_PLAYER_NUMBER = 5
+
+enum SENSOR_AREA {
+    FRONT,
+    FRONT_LEFT,
+    FRONT_RIGHT,
+    BACK,
+    BACK_LEFT,
+    BACK_RIGHT,
+};
 
 export class MyBotTrainer implements rl.BotTrainer {
 
@@ -41,26 +50,24 @@ export class MyBotTrainer implements rl.BotTrainer {
 
     getInputs(snapshot: Lugo.GameSnapshot): any {
         const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
-        const me = reader.getPlayer(Lugo.Team.Side.HOME, 5)
-        if (!me) {
-            throw new Error("did not find myself in the game")
-        }
-        const mappedOpponents = this._findOpponent(reader)
-        const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
-        const goalPosition = reader.getOpponentGoal().getCenter();
+        const me = this.getMe(reader)
 
-        const stateMapper = new Mapper(5, 3, Lugo.Team.Side.HOME);
-        const mySimplePosition = stateMapper.getRegionFromPoint(me.getPosition())
-        // console.log(`Sensorres: `, [sensorFront, sensorLeft, sensorRight])
+        // I am using another mapper used to define the two first inputs
+        // since these inputs do not have to be too granular, I am using a more wide grid so we will have less
+        // values. It will improve te training performance considerably
+        const sensorMapper = new Mapper(10, 5, Lugo.Team.Side.HOME);
+        const myGridPos = sensorMapper.getRegionFromPoint(me.getPosition())
+        const opponentGoalGridPos = sensorMapper.getRegionFromPoint(reader.getOpponentGoal().getCenter())
+
         return [
-            mySimplePosition.getCol(),// equivalent to X
-            mySimplePosition.getRow(),// Equivalent to Y
-            this.getFrontSensor(mappedOpponents, myPosition),
-            this.getBackSensor(mappedOpponents, myPosition),
-            this.getLeftFrontSensor(mappedOpponents, myPosition),
-            this.getRightFrontSensor(mappedOpponents, myPosition),
-            this.getLeftBackSensor(mappedOpponents, myPosition),
-            this.getRightBackSensor(mappedOpponents, myPosition),
+            opponentGoalGridPos.getCol() - myGridPos.getCol(),// steps away from the goal in X axis
+            opponentGoalGridPos.getRow() - myGridPos.getRow(),// steps away from the goal in Y axis
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT),
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_LEFT),
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_RIGHT),
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK),
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_LEFT),
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_RIGHT),
         ];
     }
 
@@ -295,10 +302,6 @@ export class MyBotTrainer implements rl.BotTrainer {
 
     async play(orderSet: Lugo.OrderSet, snapshot: Lugo.GameSnapshot, action: any): Promise<Lugo.OrderSet> {
         const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
-        const me = reader.getPlayer(Lugo.Team.Side.HOME, 5)
-        if (!me) {
-            throw new Error("did not find myself in the game")
-        }
         const possibleAction = [
             DIRECTION.FORWARD,
             DIRECTION.BACKWARD,
@@ -320,14 +323,8 @@ export class MyBotTrainer implements rl.BotTrainer {
     }> {
         const readerPrevious = new GameSnapshotReader(previousSnapshot, Lugo.Team.Side.HOME)
         const reader = new GameSnapshotReader(newSnapshot, Lugo.Team.Side.HOME)
-        const me = reader.getPlayer(Lugo.Team.Side.HOME, 5)
-        if (!me) {
-            throw new Error("did not find myself in the game")
-        }
-        const mePreviously = readerPrevious.getPlayer(Lugo.Team.Side.HOME, 5)
-        if (!mePreviously) {
-            throw new Error("did not find myself in the game")
-        }
+        const me = this.getMe(reader);
+        const mePreviously = this.getMe(readerPrevious);
 
         // const mappedOpponents = this._findOpponent(reader)
         const opponentGoal = reader.getOpponentGoal().getCenter()
@@ -338,19 +335,25 @@ export class MyBotTrainer implements rl.BotTrainer {
         const actualDist = Math.hypot(opponentGoal.getX() - me.getPosition().getX(),
             opponentGoal.getY() - me.getPosition().getY())
 
-        const myPosition = this.mapper.getRegionFromPoint(me.getPosition())
         let reward = (previousDist - actualDist);
         let done = false;
 
         // positive end
         // if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
-        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90){
+        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.90) {
             done = true;
             reward = 10000;
         }
         //negative end
-        const mappedOpponents = this._findOpponent(reader);
-        if(this._hasOpponent(mappedOpponents, myPosition)){
+        const stepsToClosestObstacle = Math.min(
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT) ?? Infinity,
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_LEFT) ?? Infinity,
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_RIGHT) ?? Infinity,
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK) ?? Infinity,
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_LEFT) ?? Infinity,
+            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_RIGHT) ?? Infinity,
+        );
+        if (stepsToClosestObstacle < 8) {
             done = true;
             reward = -20000;
         }
@@ -375,22 +378,91 @@ export class MyBotTrainer implements rl.BotTrainer {
         await this.remoteControl.setPlayerProps(side, number, randomPosition, randomVelocity)
     }
 
+    getMe(reader: GameSnapshotReader) {
+        const me = reader.getPlayer(Lugo.Team.Side.HOME, TRAINING_PLAYER_NUMBER)
+        if (!me) {
+            throw new Error("did not find myself in the game")
+        }
+        return me;
+    }
+
     /**
      *
+     * Returns the number of steps between the bot and the closest obstacle within that region
+     *
+     * TODO the observation MUST translate the coordinates based on the bot side
      * @param {GameSnapshotReader} reader
+     * @param sensorArea
      * @private
      */
-    _findOpponent(reader) {
-        const getOpponents = reader.getTeam(reader.getOpponentSide()).getPlayersList()
-        const mappedOpponents = []
-        for (const opponent of getOpponents) {
-            const opponentRegion = this.mapper.getRegionFromPoint(opponent.getPosition())
-            if (mappedOpponents[opponentRegion.getCol()] === undefined) {
-                mappedOpponents[opponentRegion.getCol()] = []
-            }
-            mappedOpponents[opponentRegion.getCol()][opponentRegion.getRow()] = opponent.getPosition()
+    _stepsToObstacleWithinArea(reader, sensorArea: SENSOR_AREA) {
+        // SPECS.PLAYER_MAX_SPEED is a step
+        const frontwardView = SPECS.PLAYER_MAX_SPEED * 15;//
+        const sidesView = SPECS.PLAYER_MAX_SPEED * 15;//
+        const backwardView = SPECS.PLAYER_MAX_SPEED * 15;//
+
+        const myPos = this.getMe(reader).getPosition();
+
+        const botPoint = [myPos.getX(), myPos.getY()]
+
+        // Each region is a triangle where the start point is the bot position and the other two vertex
+        // are defined by the sensor direction:
+
+        // front
+        let pointA = [myPos.getX() + frontwardView, myPos.getY() + sidesView]
+        let pointB = [myPos.getX() + frontwardView, myPos.getY() - sidesView]
+        switch (sensorArea) {
+            case SENSOR_AREA.FRONT_LEFT:
+                pointA = [myPos.getX(), myPos.getY() + sidesView]
+                pointB = [myPos.getX() + frontwardView, myPos.getY() + sidesView]
+                break;
+            case SENSOR_AREA.FRONT_RIGHT:
+                pointA = [myPos.getX(), myPos.getY() - sidesView]
+                pointB = [myPos.getX() + frontwardView, myPos.getY() - sidesView]
+                break;
+            case SENSOR_AREA.BACK:
+                pointA = [myPos.getX() - backwardView, myPos.getY() + sidesView]
+                pointB = [myPos.getX() - backwardView, myPos.getY() - sidesView]
+                break;
+            case SENSOR_AREA.BACK_LEFT:
+                pointA = [myPos.getX(), myPos.getY() + sidesView]
+                pointB = [myPos.getX() - backwardView, myPos.getY() + sidesView]
+                break;
+            case SENSOR_AREA.BACK_RIGHT:
+                pointA = [myPos.getX(), myPos.getY() - sidesView]
+                pointB = [myPos.getX() - backwardView, myPos.getY() - sidesView]
+                break;
         }
-        return mappedOpponents
+
+        const getOpponents = reader.getTeam(reader.getOpponentSide()).getPlayersList()
+        let nearestOpponentDist = null
+        for (const opponent of getOpponents) {
+            const opponentPoint = [opponent.getPosition().getX(), opponent.getPosition().getY()];
+            if (this._isPointInPolygon(opponentPoint, [botPoint, pointA, pointB])) {
+                const distToBot = Math.abs(geo.distanceBetweenPoints(opponent.getPosition(), myPos));
+                if (nearestOpponentDist == null || nearestOpponentDist > distToBot) {
+                    nearestOpponentDist = distToBot
+                }
+            }
+        }
+        if (nearestOpponentDist != null) {
+            return Math.floor(nearestOpponentDist / SPECS.PLAYER_MAX_SPEED)
+        }
+        return null
+    }
+
+    // thank you chatGPT S2
+    _isPointInPolygon(point, polygon) {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+            let xi = polygon[i][0], yi = polygon[i][1];
+            let xj = polygon[j][0], yj = polygon[j][1];
+
+            let intersect = ((yi > point[1]) !== (yj > point[1]))
+                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+            if (intersect) inside = !inside;
+        }
+        return inside;
     }
 
     /**
@@ -401,7 +473,7 @@ export class MyBotTrainer implements rl.BotTrainer {
      * @private
      */
     _hasOpponent(mappedOpponents, region) {
-        if(mappedOpponents[region.getCol()] !== undefined) {
+        if (mappedOpponents[region.getCol()] !== undefined) {
             return mappedOpponents[region.getCol()][region.getRow()];
         }
         return false;

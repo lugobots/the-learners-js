@@ -2,7 +2,7 @@ import {Mapper, Client, rl, Lugo, DIRECTION, SPECS} from "@lugobots/lugo4node";
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
 import {QLearner} from "./q-learning";
 
-const modelFilepath = './base-more-sensors.json'
+const modelFilepath = './steps-sensors.json'
 // training settings
 const trainIterations = 10000;
 const stepsPerIteration = 1000;
@@ -93,6 +93,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 // console.log(`currentState(Action) => reward`, currentState, action, reward)
 
                 let sensorsState1 = await trainingCtrl.getInputs();
+                // console.log(`Sensors: `, sensorsState1);
                 const nextState = nameState(sensorsState1)
                 learner.add(currentState, nextState, reward, action);
 
