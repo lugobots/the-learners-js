@@ -60,14 +60,16 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
         DIRECTION.BACKWARD,
         DIRECTION.LEFT,
         DIRECTION.RIGHT,
+        DIRECTION.BACKWARD_LEFT,
+        DIRECTION.BACKWARD_RIGHT,
         DIRECTION.FORWARD_RIGHT,
-        DIRECTION.FORWARD_LEFT,
+        DIRECTION.FORWARD_LEFT
     ];
 
 
     let learner = new QLearner(0, 1)
     learner.load(modelFilepath);
-    const exploration = 0.2
+    const exploration = 0.5
 
     const scores = [];
     for (let i = 0; i < trainIterations; ++i) {

@@ -77,10 +77,10 @@ export class MyBotTrainer implements rl.BotTrainer {
             DIRECTION.BACKWARD,
             DIRECTION.LEFT,
             DIRECTION.RIGHT,
+            DIRECTION.BACKWARD_RIGHT,
+            DIRECTION.BACKWARD_LEFT,
             DIRECTION.FORWARD_RIGHT,
             DIRECTION.FORWARD_LEFT,
-            // DIRECTION.BACKWARD_RIGHT,
-            // DIRECTION.BACKWARD_LEFT,
         ];
 
         const dir = reader.makeOrderMoveByDirection(possibleAction[action])
@@ -170,10 +170,10 @@ export class MyBotTrainer implements rl.BotTrainer {
                 forecastPosition = [myPos.getX() - playerMaxDislocation, myPos.getY()]
                 break;
             case SENSOR_AREA.FRONT_LEFT:
-                forecastPosition = [myPos.getX() + playerMaxDislocation/2, myPos.getY() + playerMaxDislocation/2]
+                forecastPosition = [myPos.getX() + playerMaxDislocation, myPos.getY() + playerMaxDislocation]
                 break;
             case SENSOR_AREA.FRONT_RIGHT:
-                forecastPosition = [myPos.getX() + playerMaxDislocation/2, myPos.getY() - playerMaxDislocation/2]
+                forecastPosition = [myPos.getX() + playerMaxDislocation, myPos.getY() - playerMaxDislocation]
                 break;
         }
 
