@@ -6,9 +6,9 @@ enum SENSOR_AREA {
     FRONT,
     FRONT_LEFT,
     FRONT_RIGHT,
+    LEFT,
+    RIGHT,
     BACK,
-    BACK_LEFT,
-    BACK_RIGHT,
 };
 
 export class MyBotTrainer implements rl.BotTrainer {
@@ -55,249 +55,19 @@ export class MyBotTrainer implements rl.BotTrainer {
         // I am using another mapper used to define the two first inputs
         // since these inputs do not have to be too granular, I am using a more wide grid so we will have less
         // values. It will improve te training performance considerably
-        const sensorMapper = new Mapper(10, 5, Lugo.Team.Side.HOME);
+        const sensorMapper = new Mapper(4, 3, Lugo.Team.Side.HOME);
         const myGridPos = sensorMapper.getRegionFromPoint(me.getPosition())
         const opponentGoalGridPos = sensorMapper.getRegionFromPoint(reader.getOpponentGoal().getCenter())
 
         return [
             opponentGoalGridPos.getCol() - myGridPos.getCol(),// steps away from the goal in X axis
             opponentGoalGridPos.getRow() - myGridPos.getRow(),// steps away from the goal in Y axis
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT),
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_LEFT),
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_RIGHT),
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK),
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_LEFT),
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_RIGHT),
+            this._colisionOnDirection(reader, SENSOR_AREA.FRONT),
+            this._colisionOnDirection(reader, SENSOR_AREA.LEFT),
+            this._colisionOnDirection(reader, SENSOR_AREA.RIGHT),
+            this._colisionOnDirection(reader, SENSOR_AREA.FRONT_LEFT),
+            this._colisionOnDirection(reader, SENSOR_AREA.FRONT_RIGHT),
         ];
-    }
-
-    getFrontSensor(mappedOpponents, myPosition: Region) {
-        let front = myPosition.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.right())
-        ) {
-            return 4
-        }
-        return 0
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right())
-        ) {
-            return 3
-        }
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right())
-        ) {
-            return 2
-        }
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right().right())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getBackSensor(mappedOpponents, myPosition: Region) {
-        let back = myPosition.back()
-        if (
-            this._hasOpponent(mappedOpponents, back)
-        ) {
-            return 4
-        }
-        return 0
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.right())
-        ) {
-            return 3
-        }
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.left().left()) ||
-            this._hasOpponent(mappedOpponents, back.right()) ||
-            this._hasOpponent(mappedOpponents, back.right().right())
-        ) {
-            return 2
-        }
-        return 0
-    }
-
-    getLeftFrontSensor(mappedOpponents, myPosition: Region) {
-        let left = myPosition.left()
-        if (
-            this._hasOpponent(mappedOpponents, left)
-        ) {
-            return 4
-        }
-        return 0
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front())
-        ) {
-            return 3
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front().front())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getRightFrontSensor(mappedOpponents, myPosition: Region) {
-        let right = myPosition.right()
-        if (
-            this._hasOpponent(mappedOpponents, right)
-        ) {
-            return 4
-        }
-        return 0
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front())
-        ) {
-            return 3
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front().front())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getLeftBackSensor(mappedOpponents, myPosition: Region) {
-        let left = myPosition.left().back()
-        if (
-            this._hasOpponent(mappedOpponents, left)
-        ) {
-            return 4
-        }
-        return 0
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back())
-        ) {
-            return 3
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getRightBackSensor(mappedOpponents, myPosition: Region) {
-        let right = myPosition.right().back()
-        if (
-            this._hasOpponent(mappedOpponents, right)
-        ) {
-            return 4
-        }
-        return 0
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back())
-        ) {
-            return 3
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
-            return 1
-        }
-
-        return 0
     }
 
     async play(orderSet: Lugo.OrderSet, snapshot: Lugo.GameSnapshot, action: any): Promise<Lugo.OrderSet> {
@@ -309,8 +79,8 @@ export class MyBotTrainer implements rl.BotTrainer {
             DIRECTION.RIGHT,
             DIRECTION.FORWARD_RIGHT,
             DIRECTION.FORWARD_LEFT,
-            DIRECTION.BACKWARD_RIGHT,
-            DIRECTION.BACKWARD_LEFT,
+            // DIRECTION.BACKWARD_RIGHT,
+            // DIRECTION.BACKWARD_LEFT,
         ];
 
         const dir = reader.makeOrderMoveByDirection(possibleAction[action])
@@ -339,31 +109,21 @@ export class MyBotTrainer implements rl.BotTrainer {
         let done = false;
 
         // positive end
-        // if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
-        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.90) {
+        if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.98) {
             done = true;
-            reward = 10000;
         }
         //negative end
-        const stepsToClosestObstacle = Math.min(
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT) ?? Infinity,
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_LEFT) ?? Infinity,
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.FRONT_RIGHT) ?? Infinity,
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK) ?? Infinity,
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_LEFT) ?? Infinity,
-            this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_RIGHT) ?? Infinity,
-        );
-        if (stepsToClosestObstacle < 8) {
+        const botPoint = [me.getPosition().getX(), me.getPosition().getY()]
+        if (this._pointCollidesWithOpponent(reader, botPoint)) {
             done = true;
             reward = -20000;
         }
 
-        // console.log(`newPenalty: ${newPenalty},     previousPenalty: ${previousPenalty},    deltaSensors: ${deltaSensors},  reward: ${reward}`)
         return {done, reward}
     }
 
     async _randomPlayerPos(mapper, side, number) {
-        const minCol = 15
+        const minCol = 16
         const maxCol = 27
         const minRow = 2
         const maxRow = 12
@@ -387,82 +147,48 @@ export class MyBotTrainer implements rl.BotTrainer {
     }
 
     /**
-     *
-     * Returns the number of steps between the bot and the closest obstacle within that region
-     *
-     * TODO the observation MUST translate the coordinates based on the bot side
+     * 
      * @param {GameSnapshotReader} reader
      * @param sensorArea
-     * @private
+     * @returns bool Indicator if there is a collision taking a step on the given direction 
      */
-    _stepsToObstacleWithinArea(reader, sensorArea: SENSOR_AREA) {
+    _colisionOnDirection(reader, sensorArea: SENSOR_AREA) {
         // SPECS.PLAYER_MAX_SPEED is a step
-        const frontwardView = SPECS.PLAYER_MAX_SPEED * 15;//
-        const sidesView = SPECS.PLAYER_MAX_SPEED * 15;//
-        const backwardView = SPECS.PLAYER_MAX_SPEED * 15;//
+        const playerMaxDislocation = SPECS.PLAYER_MAX_SPEED;//
 
         const myPos = this.getMe(reader).getPosition();
 
-        const botPoint = [myPos.getX(), myPos.getY()]
-
-        // Each region is a triangle where the start point is the bot position and the other two vertex
-        // are defined by the sensor direction:
-
-        // front
-        let pointA = [myPos.getX() + frontwardView, myPos.getY() + sidesView]
-        let pointB = [myPos.getX() + frontwardView, myPos.getY() - sidesView]
+        let forecastPosition = [myPos.getX() + playerMaxDislocation, myPos.getY()]
         switch (sensorArea) {
-            case SENSOR_AREA.FRONT_LEFT:
-                pointA = [myPos.getX(), myPos.getY() + sidesView]
-                pointB = [myPos.getX() + frontwardView, myPos.getY() + sidesView]
+            case SENSOR_AREA.LEFT:
+                forecastPosition = [myPos.getX(), myPos.getY() + playerMaxDislocation]
                 break;
-            case SENSOR_AREA.FRONT_RIGHT:
-                pointA = [myPos.getX(), myPos.getY() - sidesView]
-                pointB = [myPos.getX() + frontwardView, myPos.getY() - sidesView]
+            case SENSOR_AREA.RIGHT:
+                forecastPosition = [myPos.getX(), myPos.getY() - playerMaxDislocation]
                 break;
             case SENSOR_AREA.BACK:
-                pointA = [myPos.getX() - backwardView, myPos.getY() + sidesView]
-                pointB = [myPos.getX() - backwardView, myPos.getY() - sidesView]
+                forecastPosition = [myPos.getX() - playerMaxDislocation, myPos.getY()]
                 break;
-            case SENSOR_AREA.BACK_LEFT:
-                pointA = [myPos.getX(), myPos.getY() + sidesView]
-                pointB = [myPos.getX() - backwardView, myPos.getY() + sidesView]
+            case SENSOR_AREA.FRONT_LEFT:
+                forecastPosition = [myPos.getX() + playerMaxDislocation/2, myPos.getY() + playerMaxDislocation/2]
                 break;
-            case SENSOR_AREA.BACK_RIGHT:
-                pointA = [myPos.getX(), myPos.getY() - sidesView]
-                pointB = [myPos.getX() - backwardView, myPos.getY() - sidesView]
+            case SENSOR_AREA.FRONT_RIGHT:
+                forecastPosition = [myPos.getX() + playerMaxDislocation/2, myPos.getY() - playerMaxDislocation/2]
                 break;
         }
 
-        const getOpponents = reader.getTeam(reader.getOpponentSide()).getPlayersList()
-        let nearestOpponentDist = null
-        for (const opponent of getOpponents) {
-            const opponentPoint = [opponent.getPosition().getX(), opponent.getPosition().getY()];
-            if (this._isPointInPolygon(opponentPoint, [botPoint, pointA, pointB])) {
-                const distToBot = Math.abs(geo.distanceBetweenPoints(opponent.getPosition(), myPos));
-                if (nearestOpponentDist == null || nearestOpponentDist > distToBot) {
-                    nearestOpponentDist = distToBot
-                }
-            }
-        }
-        if (nearestOpponentDist != null) {
-            return Math.floor(nearestOpponentDist / SPECS.PLAYER_MAX_SPEED)
-        }
-        return null
+        return this._pointCollidesWithOpponent(reader, forecastPosition);
     }
 
-    // thank you chatGPT S2
-    _isPointInPolygon(point, polygon) {
-        let inside = false;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            let xi = polygon[i][0], yi = polygon[i][1];
-            let xj = polygon[j][0], yj = polygon[j][1];
-
-            let intersect = ((yi > point[1]) !== (yj > point[1]))
-                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
-            if (intersect) inside = !inside;
+    _pointCollidesWithOpponent(reader, point){
+        const getOpponents = reader.getTeam(reader.getOpponentSide()).getPlayersList()
+        for (const opponent of getOpponents) {
+            const distToBot = Math.hypot(opponent.getPosition().getX() - point[0], opponent.getPosition().getY() - point[1]);
+            if (distToBot <= SPECS.PLAYER_SIZE) {
+                return 1
+            }
         }
-        return inside;
+        return 0
     }
 
     /**

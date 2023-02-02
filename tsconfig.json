@@ -3,6 +3,7 @@
     "outDir": "dist",
     "module": "CommonJS",
     "moduleResolution": "Node",
-    "typeRoots": ["./src"]
+    "typeRoots": ["./src"],
+    "sourceMap": true
   }
 }

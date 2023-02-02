@@ -2,12 +2,12 @@ import {Mapper, Client, rl, Lugo, DIRECTION, SPECS} from "@lugobots/lugo4node";
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
 import {QLearner} from "./q-learning";
 
-const modelFilepath = './steps-sensors.json'
+const modelFilepath = './qtable.json'
 // training settings
 const trainIterations = 10000;
 const stepsPerIteration = 1000;
 
-const testSessionInterval = 1000;
+const testSessionInterval = 100;
 const gamesPerTestSession = 10;
 const stepsPerGame = 80;
 
@@ -62,14 +62,12 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
         DIRECTION.RIGHT,
         DIRECTION.FORWARD_RIGHT,
         DIRECTION.FORWARD_LEFT,
-        DIRECTION.BACKWARD_RIGHT,
-        DIRECTION.BACKWARD_LEFT,
     ];
 
 
-    let learner = new QLearner(0.4, 0.8)
+    let learner = new QLearner(0, 1)
     learner.load(modelFilepath);
-    const exploration = 0.05
+    const exploration = 0.2
 
     const scores = [];
     for (let i = 0; i < trainIterations; ++i) {
@@ -85,7 +83,11 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 let action = learner.bestAction(currentState);
                 //if there is no best action try to explore
                 if ((action == undefined) || (learner.getQValue(currentState, action) <= 0) || (Math.random() < exploration)) {
-                    action = possibleAction[Math.floor(Math.random() * possibleAction.length)];
+                    // Replaces action by an unexplored action
+                    for(const choice in possibleAction){
+                        if(!learner.knowsAction(currentState,choice))
+                            action = choice
+                    }
                 }
 
                 // then we pass the action to our update method
@@ -98,7 +100,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 learner.add(currentState, nextState, reward, action);
 
                 //make que q-learning algorithm number of iterations=10 or it could be another number
-                learner.learn(10);
+                learner.learn(100);
 
                 sensorsState0 = sensorsState1
 
@@ -106,6 +108,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 scores[i] += reward
                 if (done) {
                     // no more steps
+                    console.log(`Last currentState(Action) => reward`, currentState, action, reward)
                     break;
                 }
             }
@@ -134,6 +137,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                         gameScore += reward
                         if (done) {
                             console.log(`Game done after ${gameI} steps`)
+                            console.log(`Last currentState(Action) => reward`, currentState, action, reward)
                             break;
                         }
                     }
