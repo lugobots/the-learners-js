@@ -104,8 +104,6 @@ export class QLearner {
         // const serialised = inflateSync(data).toString('utf8')
         // console.log(serialised)
         this.qValuesTable = JSON.parse(data)
-
-        console.log(this.qValuesTable)
     }
 
 
@@ -252,7 +250,7 @@ export class QLearner {
         //immediate reward for the action
         let actionReward = action.reward || 0
 
-        //optimal future value, by looking at the q-values table, for the 
+        //optimal future value, by looking at the q-values table, for the
         let maxQValue = this.optimalFutureValue(action.nextState)
         let oldQValue = this.getQValue(state.name, action.name)
         let newQValue = (1 - this.alpha) * oldQValue + this.alpha * (actionReward + this.gamma * maxQValue)

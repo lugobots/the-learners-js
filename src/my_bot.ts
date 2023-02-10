@@ -17,19 +17,16 @@ export class MyBotTrainer implements rl.BotTrainer {
 
     private mapper: Mapper;
 
-    private counter: number;
     private initPosition;
 
     constructor(remoteControl: rl.RemoteControl) {
         this.remoteControl = remoteControl
-        this.counter = 0
         this.mapper = new Mapper(30, 15, Lugo.Team.Side.HOME)
     }
 
-    async createNewInitialState(): Promise<Lugo.GameSnapshot> {
-        this.counter--
-        if (this.counter <= 0) {
-            this.counter = 100;
+    async createNewInitialState(params: any): Promise<Lugo.GameSnapshot> {
+
+        if (params.randomize) {
             for (let i = 1; i <= 11; i++) {
                 await this._randomPlayerPos(this.mapper, Lugo.Team.Side.HOME, i)
                 await this._randomPlayerPos(this.mapper, Lugo.Team.Side.AWAY, i)
@@ -59,7 +56,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         return await this.remoteControl.setBallProps(ballPos, newVelocity)
     }
 
-    getInputs(snapshot: Lugo.GameSnapshot): any {
+    getState(snapshot: Lugo.GameSnapshot): any {
         const reader = new GameSnapshotReader(snapshot, Lugo.Team.Side.HOME)
         const me = this.getMe(reader)
 
@@ -80,235 +77,6 @@ export class MyBotTrainer implements rl.BotTrainer {
             this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_LEFT),
             this._stepsToObstacleWithinArea(reader, SENSOR_AREA.BACK_RIGHT),
         ];
-    }
-
-    getFrontSensor(mappedOpponents, myPosition: Region) {
-        let front = myPosition.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.right())
-        ) {
-            return 4
-        }
-        return 0
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right())
-        ) {
-            return 3
-        }
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right())
-        ) {
-            return 2
-        }
-        front = front.front()
-        if (
-            this._hasOpponent(mappedOpponents, front) ||
-            this._hasOpponent(mappedOpponents, front.left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.left().left().left().left()) ||
-            this._hasOpponent(mappedOpponents, front.right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right()) ||
-            this._hasOpponent(mappedOpponents, front.right().right().right().right())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getBackSensor(mappedOpponents, myPosition: Region) {
-        let back = myPosition.back()
-        if (
-            this._hasOpponent(mappedOpponents, back)
-        ) {
-            return 4
-        }
-        return 0
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.right())
-        ) {
-            return 3
-        }
-        back = back.back()
-        if (
-            this._hasOpponent(mappedOpponents, back) ||
-            this._hasOpponent(mappedOpponents, back.left()) ||
-            this._hasOpponent(mappedOpponents, back.left().left()) ||
-            this._hasOpponent(mappedOpponents, back.right()) ||
-            this._hasOpponent(mappedOpponents, back.right().right())
-        ) {
-            return 2
-        }
-        return 0
-    }
-
-    getLeftFrontSensor(mappedOpponents, myPosition: Region) {
-        let left = myPosition.left()
-        if (
-            this._hasOpponent(mappedOpponents, left)
-        ) {
-            return 4
-        }
-        return 0
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front())
-        ) {
-            return 3
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front()) ||
-            this._hasOpponent(mappedOpponents, left.front().front().front())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getRightFrontSensor(mappedOpponents, myPosition: Region) {
-        let right = myPosition.right()
-        if (
-            this._hasOpponent(mappedOpponents, right)
-        ) {
-            return 4
-        }
-        return 0
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front())
-        ) {
-            return 3
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front()) ||
-            this._hasOpponent(mappedOpponents, right.front().front().front())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getLeftBackSensor(mappedOpponents, myPosition: Region) {
-        let left = myPosition.left().back()
-        if (
-            this._hasOpponent(mappedOpponents, left)
-        ) {
-            return 4
-        }
-        return 0
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back())
-        ) {
-            return 3
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
-            return 2
-        }
-
-        left = left.left()
-        if (
-            this._hasOpponent(mappedOpponents, left) ||
-            this._hasOpponent(mappedOpponents, left.back()) ||
-            this._hasOpponent(mappedOpponents, left.back().back())
-        ) {
-            return 1
-        }
-
-        return 0
-    }
-
-    getRightBackSensor(mappedOpponents, myPosition: Region) {
-        let right = myPosition.right().back()
-        if (
-            this._hasOpponent(mappedOpponents, right)
-        ) {
-            return 4
-        }
-        return 0
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back())
-        ) {
-            return 3
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
-            return 2
-        }
-
-        right = right.right()
-        if (
-            this._hasOpponent(mappedOpponents, right) ||
-            this._hasOpponent(mappedOpponents, right.back()) ||
-            this._hasOpponent(mappedOpponents, right.back().back())
-        ) {
-            return 1
-        }
-
-        return 0
     }
 
     async play(orderSet: Lugo.OrderSet, snapshot: Lugo.GameSnapshot, action: any): Promise<Lugo.OrderSet> {
@@ -350,7 +118,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         let done = false;
 
         // positive end
-        // if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE)*0.90 && (me.getPosition().getY() >= SPECS.GOAL_MIN_Y) && (me.getPosition().getY() <= SPECS.GOAL_MAX_Y) ) {
         if (me.getPosition().getX() > (SPECS.FIELD_WIDTH - SPECS.GOAL_ZONE_RANGE) * 0.90) {
             done = true;
             reward = 10000;
@@ -369,7 +136,6 @@ export class MyBotTrainer implements rl.BotTrainer {
             reward = -20000;
         }
 
-        // console.log(`newPenalty: ${newPenalty},     previousPenalty: ${previousPenalty},    deltaSensors: ${deltaSensors},  reward: ${reward}`)
         return {done, reward}
     }
 
@@ -476,19 +242,6 @@ export class MyBotTrainer implements rl.BotTrainer {
         return inside;
     }
 
-    /**
-     *
-     * @param mappedOpponents
-     * @param {Region} region
-     * @returns {boolean}
-     * @private
-     */
-    _hasOpponent(mappedOpponents, region) {
-        if (mappedOpponents[region.getCol()] !== undefined) {
-            return mappedOpponents[region.getCol()][region.getRow()];
-        }
-        return false;
-    }
 }
 
 function randomInteger(min, max) {

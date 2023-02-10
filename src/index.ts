@@ -1,11 +1,13 @@
-import {Mapper, Client, rl, Lugo, DIRECTION, SPECS} from "@lugobots/lugo4node";
+import {Client, DIRECTION, Lugo, Mapper, rl} from "@lugobots/lugo4node";
 import {MyBotTrainer, TRAINING_PLAYER_NUMBER} from "./my_bot";
 import {QLearner} from "./q-learning";
 
-const modelFilepath = './steps-sensors.json'
+const modelFilepath = './sample-model.json'
+
 // training settings
 const trainIterations = 100000;
 const stepsPerIteration = 1000;
+const environmentRefreshInterval = 10;// every N iterations the environment will be randomly change
 
 const testSessionInterval = 1000;
 const gamesPerTestSession = 10;
@@ -75,9 +77,9 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
     for (let i = 0; i < trainIterations; ++i) {
         try {
             scores[i] = 0
-            await trainingCtrl.setRandomState();
+            await trainingCtrl.setEnvironment({randomize: i % environmentRefreshInterval == 0});
 
-            let sensorsState0 = await trainingCtrl.getInputs();
+            let sensorsState0 = await trainingCtrl.getState()
             for (let j = 0; j < stepsPerIteration; ++j) {
                 const currentState = nameState(sensorsState0)
 
@@ -90,10 +92,10 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
 
                 // then we pass the action to our update method
                 const {reward, done} = await trainingCtrl.update(action);
-                // console.log(`currentState(Action) => reward`, currentState, action, reward)
 
-                let sensorsState1 = await trainingCtrl.getInputs();
-                // console.log(`Sensors: `, sensorsState1);
+
+                let sensorsState1 = await trainingCtrl.getState();
+
                 const nextState = nameState(sensorsState1)
                 learner.add(currentState, nextState, reward, action);
 
@@ -109,18 +111,17 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                     break;
                 }
             }
-            console.log(`End of trainIteration ${i}, score: `, scores[i])
+            console.log(`End of train iteration ${i}, score: `, scores[i])
 
             learner.save(modelFilepath)
 
-            if((i+1) % testSessionInterval === 0) {
-                /// testing
+            if ((i + 1) % testSessionInterval === 0) {
                 console.log(`Starting test session for interaction ${i}`)
                 for (let trainI = 0; trainI < gamesPerTestSession; ++trainI) {
                     let gameScore = 0;
-                    await trainingCtrl.setRandomState();
+                    await trainingCtrl.setEnvironment({randomize: true});
                     for (let gameI = 0; gameI < stepsPerGame; ++gameI) {
-                        const sensorsStateTest = await trainingCtrl.getInputs();
+                        const sensorsStateTest = await trainingCtrl.getState();
                         const currentState = nameState(sensorsStateTest)
 
                         //and the best action
