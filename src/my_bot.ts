@@ -1,4 +1,4 @@
-import {GameSnapshotReader, Lugo, Mapper, SPECS, ORIENTATION, rl, DIRECTION, geo, Region} from "@lugobots/lugo4node";
+import {DIRECTION, GameSnapshotReader, geo, Lugo, Mapper, ORIENTATION, Region, rl, SPECS} from "@lugobots/lugo4node";
 
 export const TRAINING_PLAYER_NUMBER = 5
 
@@ -17,16 +17,27 @@ export class MyBotTrainer implements rl.BotTrainer {
 
     private mapper: Mapper;
 
+    private counter: number;
+    private initPosition;
+
     constructor(remoteControl: rl.RemoteControl) {
         this.remoteControl = remoteControl
+        this.counter = 0
+        this.mapper = new Mapper(30, 15, Lugo.Team.Side.HOME)
     }
 
     async createNewInitialState(): Promise<Lugo.GameSnapshot> {
-        this.mapper = new Mapper(30, 15, Lugo.Team.Side.HOME)
-        for (let i = 1; i <= 11; i++) {
-            await this._randomPlayerPos(this.mapper, Lugo.Team.Side.HOME, i)
-            await this._randomPlayerPos(this.mapper, Lugo.Team.Side.AWAY, i)
+        this.counter--
+        if (this.counter <= 0) {
+            this.counter = 100;
+            for (let i = 1; i <= 11; i++) {
+                await this._randomPlayerPos(this.mapper, Lugo.Team.Side.HOME, i)
+                await this._randomPlayerPos(this.mapper, Lugo.Team.Side.AWAY, i)
+            }
+
+            this.initPosition = this.mapper.getRegion(15, randomInteger(4, 10)).getCenter()
         }
+
 
         const randomVelocity = new Lugo.Velocity()
         randomVelocity.setSpeed(0)
@@ -34,7 +45,7 @@ export class MyBotTrainer implements rl.BotTrainer {
         await this.remoteControl.setPlayerProps(
             Lugo.Team.Side.HOME,
             TRAINING_PLAYER_NUMBER,
-            this.mapper.getRegion(15, randomInteger(4, 10)).getCenter(),
+            this.initPosition,
             randomVelocity)
 
         const ballPos = new Lugo.Point()
@@ -365,8 +376,8 @@ export class MyBotTrainer implements rl.BotTrainer {
     async _randomPlayerPos(mapper, side, number) {
         const minCol = 15
         const maxCol = 27
-        const minRow = 2
-        const maxRow = 12
+        const minRow = 3
+        const maxRow = 11
 
         const randomVelocity = new Lugo.Velocity()
         randomVelocity.setSpeed(0)

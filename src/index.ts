@@ -4,7 +4,7 @@ import {QLearner} from "./q-learning";
 
 const modelFilepath = './steps-sensors.json'
 // training settings
-const trainIterations = 10000;
+const trainIterations = 100000;
 const stepsPerIteration = 1000;
 
 const testSessionInterval = 1000;
@@ -110,7 +110,7 @@ async function myTrainingFunction(trainingCtrl: rl.TrainingController): Promise<
                 }
             }
             console.log(`End of trainIteration ${i}, score: `, scores[i])
-            
+
             learner.save(modelFilepath)
 
             if((i+1) % testSessionInterval === 0) {
