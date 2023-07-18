@@ -83,7 +83,7 @@ Read for more details: https://github.com/lugobots/lugo4node/blob/master/src/rl/
     ```shell
     # Executin the binary on Linux
     ./lugo_server play --dev-mode --timer-mode=remote
-    ```shell
+    ```
 4. In a third terminal `npm run start`
 
 
